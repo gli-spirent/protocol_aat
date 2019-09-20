@@ -115,7 +115,7 @@ with description('PCEP_1:') as self:
                         #print "======================================="
                         expect(len(stats_item)).to(equal(4))
                         #assert len(stats_item) == 4
-                        expect(stats_item[1] in PCEP_STATE).to(equal(True))
+                        expect(stats_item[1]).to(equal(1)) # IDLE
                         #assert stats_item[1] in PCEP_STATE
                         #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
 
@@ -151,13 +151,29 @@ with description('PCEP_1:') as self:
                 expect(response).to(equal({}))
 
             with it('starts pcc device for port 1,'):
+                global PCEP_STATE
                 portindex = 0
                 pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
                 #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
                 response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
                 expect(response).to(equal({}))
                 time.sleep(3)
-
+                sqlcmd = 'SELECT PrimaryHandle, State, TxPCRptCount, RxPCRptCount FROM PcepDeviceResults'
+                self.sql_query(portindex, sqlcmd)
+                results = self.response["results"]
+                for result in results:
+                    #print result
+                    rows = result['rows']
+                    expect(len(rows)).to(equal(1))
+                    #assert len(rows) == 1
+                    for row in rows:
+                        stats_item = row['int64Values']
+                        #print "======================================="
+                        expect(len(stats_item)).to(equal(4))
+                        #assert len(stats_item) == 4
+                        expect(stats_item[1]).to(equal(5)) # UP
+                        #assert stats_item[1] in PCEP_STATE
+                        #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
             with it('stops pcc device for port 1,'):
                 portindex = 0
                 pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
