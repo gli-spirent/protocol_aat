@@ -1,4 +1,4 @@
-import os, sys, platform, time, pwd
+import os, sys, platform, time, getpass, math
 import string, socket, struct, json, ipaddress
 import subprocess
 
@@ -160,10 +160,8 @@ def reserve_port(context, conn, slot, portgroup):
     uid = 'aat-user'
     host = platform.node()
     pid = os.getpid()
-    if platf == 'Linux':
-        uid = pwd.getpwuid( os.getuid() ).pw_name
-    elif platf == 'Windows':
-        uid = os.getenv('username')
+    if platf == 'Linux' or platf == 'Windows':
+        uid = getpass.getuser()
     else:
         print("OS: {} is not supported".format(platf))
     tm = time.ctime()
@@ -306,15 +304,12 @@ def start_analyzer(context, portid):
     ana = get_port_msg_set(context, 'Analyzer_2', portid)
     print("Starting Analyzer......")
     resp = ana.sendMessageGetResponse('GetRunState', {})
-    #print resp
     stkey = 'isRunning'
     if stkey in resp:
         if resp[stkey] == 0:
             config = {"rxTimestampLatchMode": anaTimestampLatchMode["START_OF_FRAME"], "streamAssocCfg": ("dataFilter", {"comparator16": [{"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}], "comparator32": {"enable": True, "location": ("spirentSignatureId", {}), "mask": 4294967295, "startOfRange": 0, "endOfRange": 4294967295}}), "histogramCfg": ("transferDelay", {"histLimits": [2, 6, 14, 30, 62, 126, 254, 510, 1022, 2046, 4094, 8190, 16382, 32766, 65534]}), "qbvFilters": [], "qbvBuckets": [], "diffServ": {"qualifyIPv6Dest": False, "qualifyIPv4Dest": False, "destIPv6Addr": [255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255], "destIPv4Addr": [0, 0, 0, 0]}, "counterParams": {"jumboThreshold": 1518, "oversizedThreshold": 9018, "undersizedThreshold": 64, "advSeqCheckerLateThreshold": 1000}, "signatureMode": anaSignatureMode["ENHANCED_DETECTION"], "latencyMode": False}
             context.response = ana.sendMessageGetResponse('SetCommonCfg', {'config':config})
-            #print resp
             context.response = ana.sendMessageGetResponse('Control', {"action":"START"})
-            #print resp
             context.response = ana.sendMessageGetResponse('GetRunState', {})
     return ana
 
@@ -541,7 +536,7 @@ def save_capture(fname, packets, link_type = 'ETHERNET', cp_mod = 0, append2file
     pcap_file.close()
 
 Capture_mset = 'Capture_2'
-def config_capture(context, realtime_mode, capture_mode, source_mode, flag_mode, rollover_mode, port):
+def config_capture(context, realtime_mode, capture_mode, source_mode, flag_mode, rollover_mode):
     rt_mod = 0
     cp_mod = 0
     src_mod = 0
@@ -604,6 +599,56 @@ def capture_default(context, direction, port):
     elif direction == 'COUNT':
         source_mode = 'SOURCE_MODE_COUNT'
 
-    cp_mset = get_port_msg_set(context, Capture_mset, int(port))
-    config = config_capture(context, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP', port)
+    cp_mset = get_port_msg_set(context, Capture_mset, port)
+    config = config_capture(context, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
+    print(context, dir(context))
     context.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', config)
+
+def start_capture(context, port):
+    cp_cmd = cptr_ctrl['START']
+
+    cp_mset = get_port_msg_set(context, Capture_mset, port)
+    context.response = cp_mset.sendMessageGetResponse('SetCaptureCtrl', {"cmd": {"control": cp_cmd}})
+
+def stop_capture(context, port):
+    cp_cmd = cptr_ctrl['STOP']
+    cp_mset = get_port_msg_set(context, Capture_mset, port)
+    context.response = cp_mset.sendMessageGetResponse('SetCaptureCtrl', {"cmd": {"control": cp_cmd}})
+
+def clear_capture_buffer(context, port):
+    cp_mset = get_port_msg_set(context, Capture_mset, port)
+    context.response = cp_mset.sendMessageGetResponse('SetCaptureClear', {"clear": {"clear": cptr_clear["CLEAR"]}})
+
+def get_captured_packet_count(context, port):
+    cp_mset = get_port_msg_set(context, Capture_mset, port)
+    context.response = cp_mset.sendMessageGetResponse('GetPacketCount', {})
+    if not hasattr(context, 'packet_count'):
+        setattr(context, 'packet_count', context.response['count'])
+    else:
+        context.packet_count = context.response['count']
+
+def get_captured_packets(context, several, sindex, port):
+    cp_mset = get_port_msg_set(context, Capture_mset, port)
+    startid = int(sindex)
+    coun = 0
+    if several.upper() == 'ALL':
+        startid = 0
+        coun = context.packet_count
+    else:
+        coun = int(several)
+
+    #print('==================='.format(coun))
+    context.response = cp_mset.sendMessageGetResponse('GetPackets', {"startIndex": startid, "count": coun})
+
+def save_capture_packets(context, dirname, link_type):
+    if 'packets' in context.response:
+        append2file = False
+        filename = os.path.join(dirname, 'capture'+'_'+time.strftime('%Y%m%d%H%M%S') + '.pcap')
+        save_capture(filename, context.response['packets'], link_type, context.capture_config['config']['capture_mode'], append2file, SaveBufferWithPreamble = False)
+
+def append_capture_packets(context, filename, save_append, link_type):
+    if 'packets' in context.response:
+        append2file = False
+        if save_append.lower() == 'append':
+            append2file = True
+        save_capture(filename, context.response['packets'], link_type, context.capture_config['config']['capture_mode'], append2file, SaveBufferWithPreamble = False)
