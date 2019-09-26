@@ -1,9 +1,9 @@
-# admin_1_spec.py
+# Test ceases for messageset admin_1
 import os
 from mamba import description, context, it
 from expects import expect, equal
 
-from CommonUtils import *
+from common.CommonUtils import *
 # CSPLIST is defined in hw_disc.txt in JSON format, you can define any alias for the port, CSP1 and CSP2 is used for a B2B setup
 
 with description('Admin:') as self:

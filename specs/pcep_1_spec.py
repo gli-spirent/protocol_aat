@@ -1,9 +1,9 @@
-# tennis_spec.py
+# Test cases for message set pcep_1
 import os, json, socket, time
 from mamba import description, context, it, _it
 from expects import expect, equal
 
-from CommonUtils import *
+from common.CommonUtils import *
 # CSPLIST is defined in hw_disc.txt in JSON format, you can define any alias for the port, CSP1 and CSP2 is used for a B2B setup
 
 PCEP_STATE = {
@@ -15,7 +15,7 @@ PCEP_STATE = {
     5:"SESSIONUP",
 }
 
-with description('PCEP_1:') as self:
+with description('PCEP_1:', 'routing') as self:
     def config_pcep_device(self, mode, bllHandle, ifHandle, port, peer_ip):
         # mode = 1 PCC
         # mode = 2 PCE
