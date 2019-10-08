@@ -11,7 +11,9 @@ with description('Admin:') as self:
         with context('and connect to the chassis,'):
             with before.all:
                 # using the first chassis/slot/port
-                chassis = '172.18.0.2'
+                self.chassis = '172.18.0.2'
+                self.slot = 1
+                self.port = 1
                 #print(os.environ)
                 if os.environ.has_key('CSP1'):
                     #print(os.environ['CSP1'])
