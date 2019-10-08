@@ -259,7 +259,6 @@ def make_pppoe_interfacelist(TotalCount):
     bllHandle += 1
     return pppoeinterfacelist
 
-
 def add_upper_layer(ifStack, ifType, interfacelist):
     if ifType not in InterfaceTypeMap:
         #print('Not supported ifType: {}'.format(ifType))
@@ -626,6 +625,7 @@ def get_captured_packet_count(context, port):
         setattr(context, 'packet_count', context.response['count'])
     else:
         context.packet_count = context.response['count']
+    return context.response['count']
 
 def get_captured_packets(context, several, sindex, port):
     cp_mset = get_port_msg_set(context, Capture_mset, port)
@@ -640,11 +640,12 @@ def get_captured_packets(context, several, sindex, port):
     #print('==================='.format(coun))
     context.response = cp_mset.sendMessageGetResponse('GetPackets', {"startIndex": startid, "count": coun})
 
-def save_capture_packets(context, dirname, link_type):
+def save_capture_packets(context, filename, link_type):
     if 'packets' in context.response:
         append2file = False
-        filename = os.path.join(dirname, 'capture'+'_'+time.strftime('%Y%m%d%H%M%S') + '.pcap')
+
         save_capture(filename, context.response['packets'], link_type, context.capture_config['config']['capture_mode'], append2file, SaveBufferWithPreamble = False)
+        context.capture_file = filename
 
 def append_capture_packets(context, filename, save_append, link_type):
     if 'packets' in context.response:
@@ -652,3 +653,30 @@ def append_capture_packets(context, filename, save_append, link_type):
         if save_append.lower() == 'append':
             append2file = True
         save_capture(filename, context.response['packets'], link_type, context.capture_config['config']['capture_mode'], append2file, SaveBufferWithPreamble = False)
+
+def GetCaptureCount(capFileName, Filter):
+    total = 0
+    if os.path.exists(capFileName):
+        Path = os.path.dirname(capFileName)
+        name = os.path.basename(capFileName)
+        #stc.log('INFO', 'capFileNamePlusPath = :' + str(capFileNamePlusPath))
+
+        #args = 'tshark -r ' + capFileName + ' -R ' + '\"' + Filter + '\"'
+        args = 'tshark -r "' + capFileName + '"' + ' -Y "' + Filter + '"'
+        #stc.log('INFO', 'args = ' + str(args))
+        capoutput = os.path.join(Path,  os.path.splitext(name)[0] + '.txt')
+        #stc.log('INFO', 'capoutput = :' + str(capoutput))
+        log = open(capoutput, "w", 1)
+        proc = subprocess.Popen(args , shell=True, stderr=subprocess.PIPE, stdout=log)
+        return_code = proc.wait()
+        #stc.log('INFO', 'return_code = ' + str(return_code))
+
+        log.flush()
+        log.close()
+        if return_code != 0:
+            raise Exception('Error running tshark command. Error:' + proc.stderr.read())
+        else:
+            readfile = open(capoutput, "r", 1)
+            total = sum(1 for line in readfile)
+
+    return total

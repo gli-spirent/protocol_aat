@@ -41,6 +41,7 @@ with description('PCEP_1:', 'routing') as self:
                 self.port = ['1', '1']
                 self.TotalCount = 1
                 self.portcount = 2
+                self.capture_file = os.path.join('.', 'pcep_capture'+'_'+time.strftime('%Y%m%d%H%M%S') + '.pcap')
                 #self.capture_mode = None
                 # Get setup from env
                 if os.environ.has_key('CSP1'):
@@ -53,9 +54,12 @@ with description('PCEP_1:', 'routing') as self:
                 # you MUST create portgroup to send message to the ccpu
                 self.portgroup = [devices.deviceFactory(self.chassis[0], int(self.slot[0])-1, int(self.port[0]))]
                 self.portgroup.append(devices.deviceFactory(self.chassis[1], int(self.slot[1])-1, int(self.port[1])))
+                get_port_msg_set(self, self.msg_set_name, 0)
+                get_port_msg_set(self, self.msg_set_name, 1)
                 self.response = None
                 self.ifHandle = [1, 2]
                 # you SHOULD reserve portgroup to for cleanup in regression but not necessary in your new feature development
+                print('Reserving ports...')
                 self.response = reserve_port(self, self.conn[0], self.slot[0], self.port[0])
                 self.response = reserve_port(self, self.conn[1], self.slot[1], self.port[1])
                 self.pcepdevicehdls = [1234, 4321]
@@ -137,7 +141,7 @@ with description('PCEP_1:', 'routing') as self:
                 #capture_default(self, 'TX_RX', portindex)
                 
                 #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
-                cp_mset = get_port_msg_set(self, Capture_mset, 0)
+                cp_mset = get_port_msg_set(self, Capture_mset, portindex)
                 self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
 
                 start_capture(self, portindex)
@@ -193,9 +197,15 @@ with description('PCEP_1:', 'routing') as self:
             with it('save captured packets,'):
                 portindex = 0
                 first_packet = 0
-                get_captured_packet_count(self, portindex)
-                get_captured_packets(self, 'ALL', first_packet, portindex)
-                save_capture_packets(self, './', 'ETHERNET')
+                total = get_captured_packet_count(self, portindex)
+                if total > 0:
+                    get_captured_packets(self, 'ALL', first_packet, portindex)
+                    save_capture_packets(self, self.capture_file, 'ETHERNET')
+
+            with it('check captured packets, there should be 1 lsp packet,'):
+                portindex = 0
+                total = GetCaptureCount(self.capture_file, 'ip.src == 192.85.0.3 && pcep.msg == 10')
+                expect(total).to(equal(1))
 
             with after.all:
                 # release for cleanup
