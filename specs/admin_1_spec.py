@@ -22,6 +22,7 @@ with description('Admin:') as self:
                 # conn and msg_set is a must for calling send_message
                 self.conn = connect_chassis(self.chassis)
                 self.msg_set_name = 'admin_1'
+                self.reservedports = False
 
             with it('get port group type'):
                 msg_name = 'admin_1.GetPortGroupType'
@@ -43,9 +44,11 @@ with description('Admin:') as self:
                 expect(speed).to(equal('1G'))
 
             with it('reserves a port'):
-                result = reserve_port(self, self.conn, self.slot, self.port)
+                self.reservedports = reserve_port(self, self.conn, self.slot, self.port)
+                expect(self.reservedports).to(equal(True))
                 #print(result)
             
             with it('releases a port'):
-                result = release_port(self, self.conn, self.slot, self.port)
+                if self.reservedports:
+                    result = release_port(self, self.conn, self.slot, self.port)
                 #print(result)

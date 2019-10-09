@@ -42,6 +42,7 @@ with description('PCEP_1:', 'routing') as self:
                 self.TotalCount = 1
                 self.portcount = 2
                 self.capture_file = os.path.join('.', 'pcep_capture'+'_'+time.strftime('%Y%m%d%H%M%S') + '.pcap')
+                self.reservedports = False
                 #self.capture_mode = None
                 # Get setup from env
                 if os.environ.has_key('CSP1'):
@@ -60,8 +61,10 @@ with description('PCEP_1:', 'routing') as self:
                 self.ifHandle = [1, 2]
                 # you SHOULD reserve portgroup to for cleanup in regression but not necessary in your new feature development
                 print('Reserving ports...')
-                self.response = reserve_port(self, self.conn[0], self.slot[0], self.port[0])
-                self.response = reserve_port(self, self.conn[1], self.slot[1], self.port[1])
+                self.reservedports = reserve_port(self, self.conn[0], int(self.slot[0]), int(self.port[0]))
+                expect(self.reservedports).to(equal(True))
+                result = reserve_port(self, self.conn[1], int(self.slot[1]), int(self.port[1]))
+                expect(result).to(equal(True))
                 self.pcepdevicehdls = [1234, 4321]
                 ethinter = make_default_eth_interface(self.TotalCount, srcmac_str = '00:10:94:00:00:01', srcmacstep_str = '00:00:00:00:00:01')
                 # ip string is in unicode string, aka u'127.0.0.1'
@@ -209,5 +212,6 @@ with description('PCEP_1:', 'routing') as self:
 
             with after.all:
                 # release for cleanup
-                for i in range(self.portcount):
-                    response = release_port(self, self.conn[i], self.slot[i], self.port[i])
+                if self.reservedports:
+                    for i in range(self.portcount):
+                        response = release_port(self, self.conn[i], self.slot[i], self.port[i])

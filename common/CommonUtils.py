@@ -155,6 +155,35 @@ def connect_chassis(chassis_ip):
     conn.connect(chassis_ip, tcpPort)
     return conn
 
+reserveState = {
+    0 : "AVAILABLE",
+    1 : "RESERVED",
+    2 : "OWNER_DISCONNECTED",
+    3 : "REVOKED",
+}
+
+equipStatus = {
+    0 : "UP",
+    1 : "DOWN",
+    2 : "ERROR",
+    3 : "UNKNOWN",
+}
+
+equipStatusChange = {
+        0  : "INIT_DONE",
+        1  : "REBOOT",
+        2  : "HOTSWAP_IN",
+        3  : "HOTSWAP_OUT",
+        4  : "SHUTDOWN",
+        5  : "RESERVATION_CHANGE",
+        6  : "RESTARTING",
+        7  : "INSTALLING",
+        8  : "POWER_SAVE",
+        9  : "POWERING_DOWN",
+        10 : "WAKING_UP",
+        11 : "UNKNOWN",
+}
+
 def reserve_port(context, conn, slot, portgroup):
     platf = platform.system()
     uid = 'aat-user'
@@ -167,16 +196,47 @@ def reserve_port(context, conn, slot, portgroup):
     tm = time.ctime()
     admin_1 = get_msg_set(context, 'admin_1')
     userinfo = {"userName": uid, "hostname": host, "processId": "14276", "timestamp": tm}
-    login = admin_1.createRequest('Login', {'user': userinfo})
-    response = conn.sendRequestWaitResponse(login, port=0)
-    response_dict = admin_1.parseResponse('Login', response)
-    target = [{"slot": slot, "portGroup": portgroup, "port": 0}]
-    revokeOwner = True
+    retries = 10
+    
+    while retries > 0:
+        moduleExist = False
+        beReserved = False
+        retries -= 1
+        login = admin_1.createRequest('Login', {'user': userinfo})
+        response = conn.sendRequestWaitResponse(login, port=0)
+        response_dict = admin_1.parseResponse('Login', response)
+        target = [{"slot": int(slot), "portGroup": int(portgroup), "port": 0}]
+        rOwner = None
+        #print(response_dict['info']['portGroupOwner'])
+        for pgOwner in response_dict['info']['portGroupOwner']:
+            if target[0]['slot'] == pgOwner['target']['slot'] and target[0]['portGroup'] == pgOwner['target']['portGroup'] and target[0]['port'] == pgOwner['target']['port']:
+                moduleExist = True
+                if pgOwner['owner']['userName'] != '' or pgOwner['owner']['processId'] != '' or pgOwner['owner']['hostname'] != '' or pgOwner['owner']['timestamp'] != '':
+                    rOwner = pgOwner['owner']
+                    #print(pgOwner['owner'])
+        if rOwner is None and moduleExist:
+            for pgStatus in response_dict['info']['portGroupStatus']:
+                if target[0]['slot'] == pgStatus['target']['slot'] and target[0]['portGroup'] == pgStatus['target']['portGroup'] and target[0]['port'] == pgStatus['target']['port']:
+                    #print(pgStatus['status'])
+                    if pgStatus['status'] in equipStatus and equipStatus[pgStatus['status']] != 'UP':
+                        print('Waiting for port to be UP, its status is {0}, which is still {1}'.format(equipStatus[pgStatus['status']], equipStatusChange[pgStatus['lastChange']]))
+                        time.sleep(3)
+                    else:
+                        retries = 0
+                        break
+        else:
+            if not moduleExist:
+                print('No such port {}'.format(target))
+            else:
+                print('{} is being reserved by {}'.format(target, rOwner))
+            return False
+
+    revokeOwner = False
     #print(slot)
     login = admin_1.createRequest('Reserve', {'target':target, 'revokeOwner':revokeOwner})
     response = conn.sendRequestWaitResponse(login, port=0)
     response_dict = admin_1.parseResponse('Reserve', response)
-    return response_dict
+    return True
 
 def release_port(context, conn, slot, portgroup):
     target = [{"slot": slot, "portGroup": portgroup, "port": 0}]
