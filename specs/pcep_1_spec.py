@@ -31,7 +31,7 @@ with description('PCEP_1:', 'routing') as self:
         self.response = pcepmset.sendMessageGetResponse('DoSQL', {'commands':[sqlcmd]})
 
     with context('when a chassis/slot/port is given,'):
-        with context('connect to the chassis and reserve the ports,'):
+        with context('connects to the chassis and reserves the ports,'):
             with before.all:
                 # using the first chassis/slot/port, in case you need more than 1 port
                 self.msg_set_name = 'PCEP_1'

@@ -115,7 +115,7 @@ with description('PPP_1:', 'access') as self:
         self.response = ppp_mset.sendMessageGetResponse('ControlCommand', {"blockHandleMap": handles, "controlCmd": controlType[control], "ipcpMode": ipcpMode[mode], "l2tpSessionDisconnect": disconnectl2tp})
 
     with context('when a chassis/slot/port is given,'):
-        with context('connect to the chassis and reserve the ports,'):
+        with context('connects to the chassis and reserves the ports,'):
             with before.all:
                 global protocol
                 # using the first chassis/slot/port, in case you need more than 1 port
