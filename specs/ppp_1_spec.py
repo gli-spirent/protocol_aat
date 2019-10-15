@@ -144,7 +144,7 @@ with description('PPP_1:', 'access') as self:
                 self.response = None
                 self.ifHandle = [1, 2]
                 # you SHOULD reserve portgroup to for cleanup in regression but not necessary in your new feature development
-                print('Reserving ports...')
+                print('\nReserving ports...')
                 self.reservedports = reserve_port(self, self.conn[0], int(self.slot[0]), int(self.port[0]))
                 expect(self.reservedports).to(equal(True))
                 result = reserve_port(self, self.conn[1], int(self.slot[1]), int(self.port[1]))
@@ -232,7 +232,7 @@ with description('PPP_1:', 'access') as self:
                 #stra = raw_input()
                 self.config_pppdevice(portindex)
 
-            with it('config capture with default and start capture before start devices on port 1,'):
+            with it('configs capture with default and start capture before start devices on port 1,'):
                 portindex = 0
                 #capture_default(self, 'TX_RX', portindex)
                 
@@ -242,36 +242,36 @@ with description('PPP_1:', 'access') as self:
 
                 start_capture(self, portindex)
 
-            with it('connect ppp client device for port 2,'):
+            with it('connects ppp client device for port 2,'):
                 portindex = 1
                 #print('Press any key to continue...')
                 #stra = raw_input()
                 self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
 
-            with it('connect ppp client device for port 1,'):
+            with it('connects ppp client device for port 1,'):
                 portindex = 0
                 #print('Press any key to continue...')
                 #stra = raw_input()
                 self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
                 time.sleep(3)
 
-            with it('TERMINATE ppp client device for port 1,'):
+            with it('TERMINATEs ppp client device for port 1,'):
                 portindex = 0
                 #print('Press any key to continue...')
                 #stra = raw_input()
                 self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
 
-            with it('TERMINATE ppp client device for port 2,'):
+            with it('TERMINATEs ppp client device for port 2,'):
                 portindex = 1
                 #print('Press any key to continue...')
                 #stra = raw_input()
                 self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
 
-            with it('stop capture after stopping devices,'):
+            with it('stops capture after stopping devices,'):
                 portindex = 0
                 stop_capture(self, portindex)
 
-            with it('save captured packets,'):
+            with it('saves captured packets,'):
                 portindex = 0
                 first_packet = 0
                 total = get_captured_packet_count(self, portindex)

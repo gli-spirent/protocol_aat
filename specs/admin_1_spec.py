@@ -8,7 +8,7 @@ from common.CommonUtils import *
 
 with description('Admin:') as self:
     with context('when a chassis is given,'):
-        with context('and connect to the chassis,'):
+        with context('and connects to the chassis,'):
             with before.all:
                 # using the first chassis/slot/port
                 self.chassis = '172.18.0.2'
@@ -24,7 +24,7 @@ with description('Admin:') as self:
                 self.msg_set_name = 'admin_1'
                 self.reservedports = False
 
-            with it('get port group type'):
+            with it('gets port group type'):
                 msg_name = 'admin_1.GetPortGroupType'
                 msg_content = {"portGroup": [{"slot": -1, "portGroup": -1, "port": -1}]}
                 resp_dict = send_msg(self, self.conn, msg_name, msg_content)

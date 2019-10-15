@@ -60,7 +60,7 @@ with description('PCEP_1:', 'routing') as self:
                 self.response = None
                 self.ifHandle = [1, 2]
                 # you SHOULD reserve portgroup to for cleanup in regression but not necessary in your new feature development
-                print('Reserving ports...')
+                print('\nReserving ports...')
                 self.reservedports = reserve_port(self, self.conn[0], int(self.slot[0]), int(self.port[0]))
                 expect(self.reservedports).to(equal(True))
                 result = reserve_port(self, self.conn[1], int(self.slot[1]), int(self.port[1]))
@@ -106,7 +106,7 @@ with description('PCEP_1:', 'routing') as self:
 
                 expect(self.response).to(equal({}))
 
-            with it('check the data in database of port 1,'):
+            with it('checks the data in database of port 1,'):
                 global PCEP_STATE
                 portindex = 0
                 sqlcmd = 'SELECT PrimaryHandle, State, TxPCRptCount, RxPCRptCount FROM PcepDeviceResults'
@@ -139,7 +139,7 @@ with description('PCEP_1:', 'routing') as self:
 
                 expect(self.response).to(equal({}))
 
-            with it('config capture with default and start capture before start devices,'):
+            with it('configs capture with default and start capture before start devices,'):
                 portindex = 0
                 #capture_default(self, 'TX_RX', portindex)
                 
@@ -193,11 +193,11 @@ with description('PCEP_1:', 'routing') as self:
 
                 expect(response).to(equal({}))
 
-            with it('stop capture after stopping devices,'):
+            with it('stops capture after stopping devices,'):
                 portindex = 0
                 stop_capture(self, portindex)
 
-            with it('save captured packets,'):
+            with it('saves captured packets,'):
                 portindex = 0
                 first_packet = 0
                 total = get_captured_packet_count(self, portindex)
@@ -205,7 +205,7 @@ with description('PCEP_1:', 'routing') as self:
                     get_captured_packets(self, 'ALL', first_packet, portindex)
                     save_capture_packets(self, self.capture_file, 'ETHERNET')
 
-            with it('check captured packets, there should be 1 lsp packet,'):
+            with it('checks captured packets, there should be 1 lsp packet,'):
                 portindex = 0
                 total = GetCaptureCount(self.capture_file, 'ip.src == 192.85.0.3 && pcep.msg == 10')
                 expect(total).to(equal(1))

@@ -196,7 +196,7 @@ def reserve_port(context, conn, slot, portgroup):
     tm = time.ctime()
     admin_1 = get_msg_set(context, 'admin_1')
     userinfo = {"userName": uid, "hostname": host, "processId": "14276", "timestamp": tm}
-    retries = 10
+    retries = 20
     
     while retries > 0:
         moduleExist = False
@@ -337,7 +337,7 @@ def config_interface(context, ifHandle, ifStack, port):
     ifStackList = [ifStack]
     optionList = [0]
 
-    print("Setup a interface {}...".format(ifHandle))
+    print("Setup an interface {}...".format(ifHandle))
     ifmgr_1 = get_port_msg_set(context, 'ifMgr_1', port)
     context.response = ifmgr_1.sendMessageGetResponse( 'ConfigInterfacesWithIlHandle', {"ilHandleList":ilHandleList, "ifStackList":ifStackList, "optionList":optionList})
 
