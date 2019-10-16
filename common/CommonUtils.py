@@ -151,9 +151,14 @@ def send_msg(context, conn, msg, msg_dict):
 
 def connect_chassis(chassis_ip):
     tcpPort = 40004
-    conn = mps.conn.SyncConnection()
-    conn.connect(chassis_ip, tcpPort)
-    return conn
+    conn = None
+    try:
+        conn = mps.conn.SyncConnection()
+        conn.connect(chassis_ip, tcpPort)
+        return conn
+    except:
+        print('Failed to connect to chassis: {}'.format(chassis_ip))
+        return None
 
 reserveState = {
     0 : "AVAILABLE",
@@ -185,67 +190,75 @@ equipStatusChange = {
 }
 
 def reserve_port(context, conn, slot, portgroup):
-    platf = platform.system()
-    uid = 'aat-user'
-    host = platform.node()
-    pid = os.getpid()
-    if platf == 'Linux' or platf == 'Windows':
-        uid = getpass.getuser()
-    else:
-        print("OS: {} is not supported".format(platf))
-    tm = time.ctime()
-    admin_1 = get_msg_set(context, 'admin_1')
-    userinfo = {"userName": uid, "hostname": host, "processId": "14276", "timestamp": tm}
-    retries = 20
-    
-    while retries > 0:
-        moduleExist = False
-        beReserved = False
-        retries -= 1
-        login = admin_1.createRequest('Login', {'user': userinfo})
-        response = conn.sendRequestWaitResponse(login, port=0)
-        response_dict = admin_1.parseResponse('Login', response)
-        target = [{"slot": int(slot), "portGroup": int(portgroup), "port": 0}]
-        rOwner = None
-        #print(response_dict['info']['portGroupOwner'])
-        for pgOwner in response_dict['info']['portGroupOwner']:
-            if target[0]['slot'] == pgOwner['target']['slot'] and target[0]['portGroup'] == pgOwner['target']['portGroup'] and target[0]['port'] == pgOwner['target']['port']:
-                moduleExist = True
-                if pgOwner['owner']['userName'] != '' or pgOwner['owner']['processId'] != '' or pgOwner['owner']['hostname'] != '' or pgOwner['owner']['timestamp'] != '':
-                    rOwner = pgOwner['owner']
-                    #print(pgOwner['owner'])
-        if rOwner is None and moduleExist:
-            for pgStatus in response_dict['info']['portGroupStatus']:
-                if target[0]['slot'] == pgStatus['target']['slot'] and target[0]['portGroup'] == pgStatus['target']['portGroup'] and target[0]['port'] == pgStatus['target']['port']:
-                    #print(pgStatus['status'])
-                    if pgStatus['status'] in equipStatus and equipStatus[pgStatus['status']] != 'UP':
-                        print('Waiting for port to be UP, its status is {0}, which is still {1}'.format(equipStatus[pgStatus['status']], equipStatusChange[pgStatus['lastChange']]))
-                        time.sleep(3)
-                    else:
-                        retries = 0
-                        break
+    try:
+        platf = platform.system()
+        uid = 'aat-user'
+        host = platform.node()
+        pid = os.getpid()
+        if platf == 'Linux' or platf == 'Windows':
+            uid = getpass.getuser()
         else:
-            if not moduleExist:
-                print('No such port {}'.format(target))
+            print("OS: {} is not supported".format(platf))
+        tm = time.ctime()
+        admin_1 = get_msg_set(context, 'admin_1')
+        userinfo = {"userName": uid, "hostname": host, "processId": "14276", "timestamp": tm}
+        retries = 20
+        
+        while retries > 0:
+            moduleExist = False
+            beReserved = False
+            retries -= 1
+            login = admin_1.createRequest('Login', {'user': userinfo})
+            response = conn.sendRequestWaitResponse(login, port=0)
+            response_dict = admin_1.parseResponse('Login', response)
+            target = [{"slot": int(slot), "portGroup": int(portgroup), "port": 0}]
+            rOwner = None
+            #print(response_dict['info']['portGroupOwner'])
+            for pgOwner in response_dict['info']['portGroupOwner']:
+                if target[0]['slot'] == pgOwner['target']['slot'] and target[0]['portGroup'] == pgOwner['target']['portGroup'] and target[0]['port'] == pgOwner['target']['port']:
+                    moduleExist = True
+                    if pgOwner['owner']['userName'] != '' or pgOwner['owner']['processId'] != '' or pgOwner['owner']['hostname'] != '' or pgOwner['owner']['timestamp'] != '':
+                        rOwner = pgOwner['owner']
+                        #print(pgOwner['owner'])
+            if rOwner is None and moduleExist:
+                for pgStatus in response_dict['info']['portGroupStatus']:
+                    if target[0]['slot'] == pgStatus['target']['slot'] and target[0]['portGroup'] == pgStatus['target']['portGroup'] and target[0]['port'] == pgStatus['target']['port']:
+                        #print(pgStatus['status'])
+                        if pgStatus['status'] in equipStatus and equipStatus[pgStatus['status']] != 'UP':
+                            print('Waiting for port to be UP, its status is {0} till now, which is still {1}'.format(equipStatus[pgStatus['status']], equipStatusChange[pgStatus['lastChange']]))
+                            time.sleep(3)
+                        else:
+                            retries = 0
+                            break
             else:
-                print('{} is being reserved by {}'.format(target, rOwner))
-            return False
+                if not moduleExist:
+                    print('No such port {}'.format(target))
+                else:
+                    print('{} is being reserved by {}'.format(target, rOwner))
+                return False
 
-    revokeOwner = False
-    #print(slot)
-    login = admin_1.createRequest('Reserve', {'target':target, 'revokeOwner':revokeOwner})
-    response = conn.sendRequestWaitResponse(login, port=0)
-    response_dict = admin_1.parseResponse('Reserve', response)
-    return True
+        revokeOwner = False
+        #print(slot)
+        login = admin_1.createRequest('Reserve', {'target':target, 'revokeOwner':revokeOwner})
+        response = conn.sendRequestWaitResponse(login, port=0)
+        response_dict = admin_1.parseResponse('Reserve', response)
+        return True
+    except:
+        print('Error happened in reserve_port!')
+        return False
 
 def release_port(context, conn, slot, portgroup):
-    target = [{"slot": slot, "portGroup": portgroup, "port": 0}]
-    mode = 'FULL'
-    admin_1 = get_msg_set(context, 'admin_1')
-    login = admin_1.createRequest('Release', {'target':target, 'mode':mode})
-    response = conn.sendRequestWaitResponse(login, port=0)
-    response_dict = admin_1.parseResponse('Release', response)
-    return response_dict
+    try:
+        target = [{"slot": slot, "portGroup": portgroup, "port": 0}]
+        mode = 'FULL'
+        admin_1 = get_msg_set(context, 'admin_1')
+        login = admin_1.createRequest('Release', {'target':target, 'mode':mode})
+        response = conn.sendRequestWaitResponse(login, port=0)
+        response_dict = admin_1.parseResponse('Release', response)
+        return response_dict
+    except:
+        print('Error happened in release_port!')
+        return {}
 
 InterfaceTypeList = {
     "IPv6"   : 0,
@@ -360,17 +373,21 @@ anaSignatureMode = {
 }
 
 def start_analyzer(context, portid):
-    ana = get_port_msg_set(context, 'Analyzer_2', portid)
-    print("Starting Analyzer......")
-    resp = ana.sendMessageGetResponse('GetRunState', {})
-    stkey = 'isRunning'
-    if stkey in resp:
-        if resp[stkey] == 0:
-            config = {"rxTimestampLatchMode": anaTimestampLatchMode["START_OF_FRAME"], "streamAssocCfg": ("dataFilter", {"comparator16": [{"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}], "comparator32": {"enable": True, "location": ("spirentSignatureId", {}), "mask": 4294967295, "startOfRange": 0, "endOfRange": 4294967295}}), "histogramCfg": ("transferDelay", {"histLimits": [2, 6, 14, 30, 62, 126, 254, 510, 1022, 2046, 4094, 8190, 16382, 32766, 65534]}), "qbvFilters": [], "qbvBuckets": [], "diffServ": {"qualifyIPv6Dest": False, "qualifyIPv4Dest": False, "destIPv6Addr": [255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255], "destIPv4Addr": [0, 0, 0, 0]}, "counterParams": {"jumboThreshold": 1518, "oversizedThreshold": 9018, "undersizedThreshold": 64, "advSeqCheckerLateThreshold": 1000}, "signatureMode": anaSignatureMode["ENHANCED_DETECTION"], "latencyMode": False}
-            context.response = ana.sendMessageGetResponse('SetCommonCfg', {'config':config})
-            context.response = ana.sendMessageGetResponse('Control', {"action":"START"})
-            context.response = ana.sendMessageGetResponse('GetRunState', {})
-    return ana
+    try:
+        ana = get_port_msg_set(context, 'Analyzer_2', portid)
+        print("Starting Analyzer......")
+        resp = ana.sendMessageGetResponse('GetRunState', {})
+        stkey = 'isRunning'
+        if stkey in resp:
+            if resp[stkey] == 0:
+                config = {"rxTimestampLatchMode": anaTimestampLatchMode["START_OF_FRAME"], "streamAssocCfg": ("dataFilter", {"comparator16": [{"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}, {"enable": False, "location": ("vlanTag", {"index": 0}), "mask": 0, "startOfRange": 0, "endOfRange": 0, "filterChain": False}], "comparator32": {"enable": True, "location": ("spirentSignatureId", {}), "mask": 4294967295, "startOfRange": 0, "endOfRange": 4294967295}}), "histogramCfg": ("transferDelay", {"histLimits": [2, 6, 14, 30, 62, 126, 254, 510, 1022, 2046, 4094, 8190, 16382, 32766, 65534]}), "qbvFilters": [], "qbvBuckets": [], "diffServ": {"qualifyIPv6Dest": False, "qualifyIPv4Dest": False, "destIPv6Addr": [255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255], "destIPv4Addr": [0, 0, 0, 0]}, "counterParams": {"jumboThreshold": 1518, "oversizedThreshold": 9018, "undersizedThreshold": 64, "advSeqCheckerLateThreshold": 1000}, "signatureMode": anaSignatureMode["ENHANCED_DETECTION"], "latencyMode": False}
+                context.response = ana.sendMessageGetResponse('SetCommonCfg', {'config':config})
+                context.response = ana.sendMessageGetResponse('Control', {"action":"START"})
+                context.response = ana.sendMessageGetResponse('GetRunState', {})
+        return ana
+    except:
+        print('Failed to start analyzer on port {}'.format(portid+1))
+        return None
 
 cptr_slice = {
     "DISABLE" : 0,
