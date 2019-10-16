@@ -1,4 +1,4 @@
-# Test cases for message set pcep_1
+# Test cases for message set PPP_1
 import os, json, socket, time
 from mamba import description, context, it, _it
 from expects import expect, equal
@@ -57,8 +57,8 @@ sessionState = {
 
 with description('PPP_1:', 'access') as self:
     def sql_query(self, port, sqlcmd):
-        pcepmset = get_port_msg_set(self, 'PPP_1', port)
-        self.response = pcepmset.sendMessageGetResponse('DoSQL', {'commands':[sqlcmd]})
+        pppmset = get_port_msg_set(self, 'PPP_1', port)
+        self.response = pppmset.sendMessageGetResponse('DoSQL', {'commands':[sqlcmd]})
 
     def get_proto_config(self, proto):
         attr_name = 'pppBlockConfigParams'
