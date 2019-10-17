@@ -345,14 +345,17 @@ def add_upper_layer(ifStack, ifType, interfacelist):
     return ifStack
 
 def config_interface(context, ifHandle, ifStack, port):
-    ilHandleList = [int(ifHandle)]
+    try:
+        ilHandleList = [int(ifHandle)]
 
-    ifStackList = [ifStack]
-    optionList = [0]
+        ifStackList = [ifStack]
+        optionList = [0]
 
-    print("Setup an interface {}...".format(ifHandle))
-    ifmgr_1 = get_port_msg_set(context, 'ifMgr_1', port)
-    context.response = ifmgr_1.sendMessageGetResponse( 'ConfigInterfacesWithIlHandle', {"ilHandleList":ilHandleList, "ifStackList":ifStackList, "optionList":optionList})
+        print("Setup an interface {}...".format(ifHandle))
+        ifmgr_1 = get_port_msg_set(context, 'ifMgr_1', port)
+        context.response = ifmgr_1.sendMessageGetResponse( 'ConfigInterfacesWithIlHandle', {"ilHandleList":ilHandleList, "ifStackList":ifStackList, "optionList":optionList})
+    except:
+        print('Failed to config interface')
 
 def attach_interface(context, ifHandle, port, mset):
     msgset = get_port_msg_set(context, mset, port)
