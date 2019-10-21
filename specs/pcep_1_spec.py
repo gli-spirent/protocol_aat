@@ -32,7 +32,7 @@ with description('PCEP_1:', 'routing') as self:
 
     with context('when a chassis/slot/port is given,'):
         with context('connects to the chassis and reserves the ports,'):
-            with before.all:
+            with before.all: # Don't use multiple before.all/after.all(or .each) in different contexts, see https://github.com/nestorsalceda/mamba/issues/130 for details
                 # using the first chassis/slot/port, in case you need more than 1 port
                 self.msg_set_name = 'PCEP_1'
                 # need 2 ports
@@ -85,133 +85,136 @@ with description('PCEP_1:', 'routing') as self:
                 self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
                 start_analyzer(self, 1)
 
-            with it('configs global parameters for port 1,'):
-                pcep_1 = get_port_msg_set(self, self.msg_set_name, 0)
-                cfg = {"GlobalCfg": {"OpenDelay": 100, "CloseDelay": 100, "SessionOutStanding": 100, "SessionRetryCount": 50, "SessionRetryInterval": 5, "RequestRetryCount": 100, "RequestRetryInterval": 30, "LSPPerMessage": 100, "TCPInterval": 30, "PacketAlignToMTU": False, "EnableTCPNoDelay": False, "AssociationObjectClass": 40, "UseSRDraft5": False, "AssociationTypeListTlvType": 200, "PpagAssociationType": 100, "PpagTlvType": 100, "PathSegmentTlvType": 80, "PathBindingTlvType": 81, "ScaleMode": False}}
-                response = pcep_1.sendMessageGetResponse('ConfigPcepGlobal', cfg)
-                expect(response).to(equal({}))
-
-            with it('configs pcc device for port 1 without attach interface'):
-                try:
-                    portindex = 0
-                    self.config_pcep_device(1, self.pcepdevicehdls[portindex], self.ifHandle[portindex], portindex, u'192.85.1.4')
-                    expect(True).to(equal(False))
-                except:
-                    expect(True).to(equal(True))
-
-            with it('configs pcc device for port 1 after attach interface,'):
-                portindex = 0
-                attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name)
-                self.config_pcep_device(1, self.pcepdevicehdls[portindex], self.ifHandle[portindex], portindex, u'192.85.1.4')
-
-                expect(self.response).to(equal({}))
-
-            with it('checks the data in database of port 1,'):
-                global PCEP_STATE
-                portindex = 0
-                sqlcmd = 'SELECT PrimaryHandle, State, TxPCRptCount, RxPCRptCount FROM PcepDeviceResults'
-                self.sql_query(portindex, sqlcmd)
-                results = self.response["results"]
-                for result in results:
-                    #print result
-                    rows = result['rows']
-                    expect(len(rows)).to(equal(1))
-                    #assert len(rows) == 1
-                    for row in rows:
-                        stats_item = row['int64Values']
-                        #print "======================================="
-                        expect(len(stats_item)).to(equal(4))
-                        #assert len(stats_item) == 4
-                        expect(stats_item[1]).to(equal(1)) # IDLE
-                        #assert stats_item[1] in PCEP_STATE
-                        #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
-
-            with it('configs global parameters for port 2,'):
-                pcep_1 = get_port_msg_set(self, self.msg_set_name, 1)
-                cfg = {"GlobalCfg": {"OpenDelay": 100, "CloseDelay": 100, "SessionOutStanding": 100, "SessionRetryCount": 50, "SessionRetryInterval": 5, "RequestRetryCount": 100, "RequestRetryInterval": 30, "LSPPerMessage": 100, "TCPInterval": 30, "PacketAlignToMTU": False, "EnableTCPNoDelay": False, "AssociationObjectClass": 40, "UseSRDraft5": False, "AssociationTypeListTlvType": 200, "PpagAssociationType": 100, "PpagTlvType": 100, "PathSegmentTlvType": 80, "PathBindingTlvType": 81, "ScaleMode": False}}
-                response = pcep_1.sendMessageGetResponse('ConfigPcepGlobal', cfg)
-                expect(response).to(equal({}))
-
-            with it('configs pce device for port 2 after attach interface,'):
-                portindex = 1
-                attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name)
-                self.config_pcep_device(2, self.pcepdevicehdls[portindex], self.ifHandle[portindex], portindex, u'192.85.0.3')
-
-                expect(self.response).to(equal({}))
-
-            with it('configs capture with default and start capture before start devices,'):
-                portindex = 0
-                #capture_default(self, 'TX_RX', portindex)
-                
-                #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
-                cp_mset = get_port_msg_set(self, Capture_mset, portindex)
-                self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
-
-                start_capture(self, portindex)
-                
-            with it('starts pce device for port 2,'):
-                portindex = 1
-                pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
-                #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
-                response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
-
-                expect(response).to(equal({}))
-
-            with it('starts pcc device for port 1,'):
-                global PCEP_STATE
-                portindex = 0
-                pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
-                #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
-                response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
-                expect(response).to(equal({}))
-                time.sleep(3)
-                sqlcmd = 'SELECT PrimaryHandle, State, TxPCRptCount, RxPCRptCount FROM PcepDeviceResults'
-                self.sql_query(portindex, sqlcmd)
-                results = self.response["results"]
-                for result in results:
-                    #print result
-                    rows = result['rows']
-                    expect(len(rows)).to(equal(1))
-                    #assert len(rows) == 1
-                    for row in rows:
-                        stats_item = row['int64Values']
-                        #print "======================================="
-                        expect(len(stats_item)).to(equal(4))
-                        #assert len(stats_item) == 4
-                        expect(stats_item[1]).to(equal(5)) # UP
-                        #assert stats_item[1] in PCEP_STATE
-                        #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
-            with it('stops pcc device for port 1,'):
-                portindex = 0
-                pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
-                response = pcep_1.sendMessageGetResponse('StopPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
-
-            with it('stops pce device for port 2,'):
-                portindex = 1
-                pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
-                response = pcep_1.sendMessageGetResponse('StopPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
-
-                expect(response).to(equal({}))
-
-            with it('stops capture after stopping devices,'):
-                portindex = 0
-                stop_capture(self, portindex)
-
-            with it('saves captured packets,'):
-                portindex = 0
-                first_packet = 0
-                total = get_captured_packet_count(self, portindex)
-                if total > 0:
-                    get_captured_packets(self, 'ALL', first_packet, portindex)
-                    save_capture_packets(self, self.capture_file, 'ETHERNET')
-
-            with it('checks captured packets, there should be 1 lsp packet,'):
-                portindex = 0
-                total = GetCaptureCount(self.capture_file, 'ip.src == 192.85.0.3 && pcep.msg == 10')
-                expect(total).to(equal(1))
-
-            with after.all:
+            with after.all: # Don't use multiple before.all/after.all(or .each) in different contexts, see https://github.com/nestorsalceda/mamba/issues/130 for details
                 # release for cleanup
                 if self.reservedports:
                     for i in range(self.portcount):
                         response = release_port(self, self.conn[i], self.slot[i], self.port[i])
+
+            with context('configs pcep for port 1 and 2,'):
+                with it('configs global parameters for port 1,'):
+                    pcep_1 = get_port_msg_set(self, self.msg_set_name, 0)
+                    cfg = {"GlobalCfg": {"OpenDelay": 100, "CloseDelay": 100, "SessionOutStanding": 100, "SessionRetryCount": 50, "SessionRetryInterval": 5, "RequestRetryCount": 100, "RequestRetryInterval": 30, "LSPPerMessage": 100, "TCPInterval": 30, "PacketAlignToMTU": False, "EnableTCPNoDelay": False, "AssociationObjectClass": 40, "UseSRDraft5": False, "AssociationTypeListTlvType": 200, "PpagAssociationType": 100, "PpagTlvType": 100, "PathSegmentTlvType": 80, "PathBindingTlvType": 81, "ScaleMode": False}}
+                    response = pcep_1.sendMessageGetResponse('ConfigPcepGlobal', cfg)
+                    expect(response).to(equal({}))
+
+                with it('configs pcc device for port 1 without attach interface'):
+                    try:
+                        portindex = 0
+                        self.config_pcep_device(1, self.pcepdevicehdls[portindex], self.ifHandle[portindex], portindex, u'192.85.1.4')
+                        expect(True).to(equal(False))
+                    except:
+                        expect(True).to(equal(True))
+
+                with it('configs pcc device for port 1 after attach interface,'):
+                    portindex = 0
+                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name)
+                    self.config_pcep_device(1, self.pcepdevicehdls[portindex], self.ifHandle[portindex], portindex, u'192.85.1.4')
+
+                    expect(self.response).to(equal({}))
+
+                with it('checks the data in database of port 1,'):
+                    global PCEP_STATE
+                    portindex = 0
+                    sqlcmd = 'SELECT PrimaryHandle, State, TxPCRptCount, RxPCRptCount FROM PcepDeviceResults'
+                    self.sql_query(portindex, sqlcmd)
+                    results = self.response["results"]
+                    for result in results:
+                        #print result
+                        rows = result['rows']
+                        expect(len(rows)).to(equal(1))
+                        #assert len(rows) == 1
+                        for row in rows:
+                            stats_item = row['int64Values']
+                            #print "======================================="
+                            expect(len(stats_item)).to(equal(4))
+                            #assert len(stats_item) == 4
+                            expect(stats_item[1]).to(equal(1)) # IDLE
+                            #assert stats_item[1] in PCEP_STATE
+                            #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
+
+                with it('configs global parameters for port 2,'):
+                    pcep_1 = get_port_msg_set(self, self.msg_set_name, 1)
+                    cfg = {"GlobalCfg": {"OpenDelay": 100, "CloseDelay": 100, "SessionOutStanding": 100, "SessionRetryCount": 50, "SessionRetryInterval": 5, "RequestRetryCount": 100, "RequestRetryInterval": 30, "LSPPerMessage": 100, "TCPInterval": 30, "PacketAlignToMTU": False, "EnableTCPNoDelay": False, "AssociationObjectClass": 40, "UseSRDraft5": False, "AssociationTypeListTlvType": 200, "PpagAssociationType": 100, "PpagTlvType": 100, "PathSegmentTlvType": 80, "PathBindingTlvType": 81, "ScaleMode": False}}
+                    response = pcep_1.sendMessageGetResponse('ConfigPcepGlobal', cfg)
+                    expect(response).to(equal({}))
+
+                with it('configs pce device for port 2 after attach interface,'):
+                    portindex = 1
+                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name)
+                    self.config_pcep_device(2, self.pcepdevicehdls[portindex], self.ifHandle[portindex], portindex, u'192.85.0.3')
+
+                    expect(self.response).to(equal({}))
+
+                with context('connects devices and do capture after config,'):
+                    with it('configs capture with default and start capture before start devices,'):
+                        portindex = 0
+                        #capture_default(self, 'TX_RX', portindex)
+                        
+                        #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
+                        cp_mset = get_port_msg_set(self, Capture_mset, portindex)
+                        self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
+
+                        start_capture(self, portindex)
+                        
+                    with it('starts pce device for port 2,'):
+                        portindex = 1
+                        pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
+                        #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
+                        response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
+
+                        expect(response).to(equal({}))
+
+                    with it('starts pcc device for port 1,'):
+                        global PCEP_STATE
+                        portindex = 0
+                        pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
+                        #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
+                        response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
+                        expect(response).to(equal({}))
+                        time.sleep(3)
+                        sqlcmd = 'SELECT PrimaryHandle, State, TxPCRptCount, RxPCRptCount FROM PcepDeviceResults'
+                        self.sql_query(portindex, sqlcmd)
+                        results = self.response["results"]
+                        for result in results:
+                            #print result
+                            rows = result['rows']
+                            expect(len(rows)).to(equal(1))
+                            #assert len(rows) == 1
+                            for row in rows:
+                                stats_item = row['int64Values']
+                                #print "======================================="
+                                expect(len(stats_item)).to(equal(4))
+                                #assert len(stats_item) == 4
+                                expect(stats_item[1]).to(equal(5)) # UP
+                                #assert stats_item[1] in PCEP_STATE
+                                #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
+                    with context('stops devices and check the results,'):
+                        with it('stops pcc device for port 1,'):
+                            portindex = 0
+                            pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
+                            response = pcep_1.sendMessageGetResponse('StopPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
+
+                        with it('stops pce device for port 2,'):
+                            portindex = 1
+                            pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
+                            response = pcep_1.sendMessageGetResponse('StopPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
+
+                            expect(response).to(equal({}))
+
+                        with it('stops capture after stopping devices,'):
+                            portindex = 0
+                            stop_capture(self, portindex)
+
+                        with it('saves captured packets,'):
+                            portindex = 0
+                            first_packet = 0
+                            total = get_captured_packet_count(self, portindex)
+                            if total > 0:
+                                get_captured_packets(self, 'ALL', first_packet, portindex)
+                                save_capture_packets(self, self.capture_file, 'ETHERNET')
+
+                        with it('checks captured packets, there should be 1 lsp packet,'):
+                            portindex = 0
+                            total = GetCaptureCount(self.capture_file, 'ip.src == 192.85.0.3 && pcep.msg == 10')
+                            expect(total).to(equal(1))

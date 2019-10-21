@@ -6,10 +6,10 @@ from expects import expect, equal
 from common.CommonUtils import *
 # CSPLIST is defined in hw_disc.txt in JSON format, you can define any alias for the port, CSP1 and CSP2 is used for a B2B setup
 
-with description('Admin:') as self:
+with description('Admin:', 'admin') as self:
     with context('when a chassis is given,'):
         with context('and connects to the chassis,'):
-            with before.all:
+            with before.all: # Don't use multiple before.all/after.all(or .each) in different contexts, see https://github.com/nestorsalceda/mamba/issues/130 for details
                 # using the first chassis/slot/port
                 self.chassis = '172.18.0.2'
                 self.slot = 1
@@ -23,6 +23,8 @@ with description('Admin:') as self:
                 self.conn = connect_chassis(self.chassis)
                 self.msg_set_name = 'admin_1'
                 self.reservedports = False
+            with after.all: # Don't use multiple before.all/after.all(or .each) in different contexts, see https://github.com/nestorsalceda/mamba/issues/130 for details
+                pass # The last test case  has released the port
 
             with it('gets port group type'):
                 msg_name = 'admin_1.GetPortGroupType'

@@ -116,7 +116,7 @@ with description('PPP_1:', 'access') as self:
 
     with context('when a chassis/slot/port is given,'):
         with context('connects to the chassis and reserves the ports,'):
-            with before.all:
+            with before.all: # Don't use multiple before.all/after.all(or .each) in different contexts, see https://github.com/nestorsalceda/mamba/issues/130 for details
                 global protocol
                 # using the first chassis/slot/port, in case you need more than 1 port
                 self.msg_set_name = 'PPP_1'
@@ -181,111 +181,110 @@ with description('PPP_1:', 'access') as self:
                 self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
                 start_analyzer(self, 1)
 
-            with it('configs ppp client port parameters for port 1,'):
-                global sequenceType
-                portindex = 0
-                enableBlockRate = False
-                clientMode = True
-                sequence = 'SEQUENTIAL'
-                conrate = 100
-                disrate = 1000
-                outstanding = 1000
-                portPcHandle = 5234
-                posPcHandle = 5236
-                port_name = 'AAT Port 1'
-                assert sequence in sequenceType
-                portconfig = {"portConfigParams": {"enableBlockRate": enableBlockRate, "connectRate": int(conrate), "disconnectRate": int(disrate), "maxOutstandingSessions": int(outstanding), "clientMode": clientMode, "sequence": sequenceType[sequence], "portPcHandle": int(portPcHandle), "posPcHandle": int(posPcHandle), "portName": port_name}}
-                ppp_mset = get_port_msg_set(self, self.msg_set_name, portindex)
-                self.response = ppp_mset.sendMessageGetResponse('ConfigurePort', portconfig)
-
-            with it('configs ppp server port parameters for port 2,'):
-                global sequenceType
-                portindex = 1
-                enableBlockRate = False
-                clientMode = False
-                sequence = 'SEQUENTIAL'
-                conrate = 100
-                disrate = 1000
-                outstanding = 1000
-                portPcHandle = 5234
-                posPcHandle = 5236
-                port_name = 'AAT Port 2'
-                assert sequence in sequenceType
-                
-                portconfig = {"portConfigParams": {"enableBlockRate": enableBlockRate, "connectRate": int(conrate), "disconnectRate": int(disrate), "maxOutstandingSessions": int(outstanding), "clientMode": clientMode, "sequence": sequenceType[sequence], "portPcHandle": int(portPcHandle), "posPcHandle": int(posPcHandle), "portName": port_name}}
-                ppp_mset = get_port_msg_set(self, self.msg_set_name, portindex)
-                self.response = ppp_mset.sendMessageGetResponse('ConfigurePort', portconfig)
-
-            with it('configs ppp client device for port 1,'):
-                portindex = 0
-                attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name) #self.ifHandle[0]
-
-                #print('Press any key to continue...')
-                #stra = raw_input()
-                self.config_pppdevice(portindex)
-
-            with it('configs ppp client device for port 2,'):
-                portindex = 1
-                attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name) #self.ifHandle[0]
-
-                #print('Press any key to continue...')
-                #stra = raw_input()
-                self.config_pppdevice(portindex)
-
-            with it('configs capture with default and start capture before start devices on port 1,'):
-                portindex = 0
-                #capture_default(self, 'TX_RX', portindex)
-                
-                #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
-                cp_mset = get_port_msg_set(self, Capture_mset, portindex)
-                self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
-
-                start_capture(self, portindex)
-
-            with it('connects ppp client device for port 2,'):
-                portindex = 1
-                #print('Press any key to continue...')
-                #stra = raw_input()
-                self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
-
-            with it('connects ppp client device for port 1,'):
-                portindex = 0
-                #print('Press any key to continue...')
-                #stra = raw_input()
-                self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
-                time.sleep(3)
-
-            with it('TERMINATEs ppp client device for port 1,'):
-                portindex = 0
-                #print('Press any key to continue...')
-                #stra = raw_input()
-                self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
-
-            with it('TERMINATEs ppp client device for port 2,'):
-                portindex = 1
-                #print('Press any key to continue...')
-                #stra = raw_input()
-                self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
-
-            with it('stops capture after stopping devices,'):
-                portindex = 0
-                stop_capture(self, portindex)
-
-            with it('saves captured packets,'):
-                portindex = 0
-                first_packet = 0
-                total = get_captured_packet_count(self, portindex)
-                if total > 0:
-                    get_captured_packets(self, 'ALL', first_packet, portindex)
-                    save_capture_packets(self, self.capture_file, 'ETHERNET')
-                else:
-                    print('\nNo packet captured!')
-
-            with after.all:
+            with after.all: # Don't use multiple before.all/after.all(or .each) in different contexts, see https://github.com/nestorsalceda/mamba/issues/130 for details
                 # release for cleanup
-                # wait for input
-                #print('Press any key to continue...')
-                #stra = raw_input()
                 if self.reservedports:
                     for i in range(self.portcount):
                         response = release_port(self, self.conn[i], self.slot[i], self.port[i])
+
+            with context('configs ppp for the ports,'):
+                with it('configs ppp client port parameters for port 1,'):
+                    global sequenceType
+                    portindex = 0
+                    enableBlockRate = False
+                    clientMode = True
+                    sequence = 'SEQUENTIAL'
+                    conrate = 100
+                    disrate = 1000
+                    outstanding = 1000
+                    portPcHandle = 5234
+                    posPcHandle = 5236
+                    port_name = 'AAT Port 1'
+                    assert sequence in sequenceType
+                    portconfig = {"portConfigParams": {"enableBlockRate": enableBlockRate, "connectRate": int(conrate), "disconnectRate": int(disrate), "maxOutstandingSessions": int(outstanding), "clientMode": clientMode, "sequence": sequenceType[sequence], "portPcHandle": int(portPcHandle), "posPcHandle": int(posPcHandle), "portName": port_name}}
+                    ppp_mset = get_port_msg_set(self, self.msg_set_name, portindex)
+                    self.response = ppp_mset.sendMessageGetResponse('ConfigurePort', portconfig)
+
+                with it('configs ppp server port parameters for port 2,'):
+                    global sequenceType
+                    portindex = 1
+                    enableBlockRate = False
+                    clientMode = False
+                    sequence = 'SEQUENTIAL'
+                    conrate = 100
+                    disrate = 1000
+                    outstanding = 1000
+                    portPcHandle = 5234
+                    posPcHandle = 5236
+                    port_name = 'AAT Port 2'
+                    assert sequence in sequenceType
+                    
+                    portconfig = {"portConfigParams": {"enableBlockRate": enableBlockRate, "connectRate": int(conrate), "disconnectRate": int(disrate), "maxOutstandingSessions": int(outstanding), "clientMode": clientMode, "sequence": sequenceType[sequence], "portPcHandle": int(portPcHandle), "posPcHandle": int(posPcHandle), "portName": port_name}}
+                    ppp_mset = get_port_msg_set(self, self.msg_set_name, portindex)
+                    self.response = ppp_mset.sendMessageGetResponse('ConfigurePort', portconfig)
+
+                with it('configs ppp client device for port 1,'):
+                    portindex = 0
+                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name) #self.ifHandle[0]
+
+                    #print('Press any key to continue...')
+                    #stra = raw_input()
+                    self.config_pppdevice(portindex)
+
+                with it('configs ppp client device for port 2,'):
+                    portindex = 1
+                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name) #self.ifHandle[0]
+
+                    #print('Press any key to continue...')
+                    #stra = raw_input()
+                    self.config_pppdevice(portindex)
+                with context('configs capture the ports and start devices'):
+                    with it('configs capture with default and start capture before start devices on port 1,'):
+                        portindex = 0
+                        #capture_default(self, 'TX_RX', portindex)
+                        
+                        #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
+                        cp_mset = get_port_msg_set(self, Capture_mset, portindex)
+                        self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
+
+                        start_capture(self, portindex)
+
+                    with it('connects ppp client device for port 2,'):
+                        portindex = 1
+                        #print('Press any key to continue...')
+                        #stra = raw_input()
+                        self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
+
+                    with it('connects ppp client device for port 1,'):
+                        portindex = 0
+                        #print('Press any key to continue...')
+                        #stra = raw_input()
+                        self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
+                        time.sleep(3)
+                    with context('stops devices and check the results,'):
+                        with it('TERMINATEs ppp client device for port 1,'):
+                            portindex = 0
+                            #print('Press any key to continue...')
+                            #stra = raw_input()
+                            self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
+
+                        with it('TERMINATEs ppp client device for port 2,'):
+                            portindex = 1
+                            #print('Press any key to continue...')
+                            #stra = raw_input()
+                            self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
+
+                        with it('stops capture after stopping devices,'):
+                            portindex = 0
+                            stop_capture(self, portindex)
+
+                        with it('saves captured packets,'):
+                            portindex = 0
+                            first_packet = 0
+                            total = get_captured_packet_count(self, portindex)
+                            if total > 0:
+                                get_captured_packets(self, 'ALL', first_packet, portindex)
+                                save_capture_packets(self, self.capture_file, 'ETHERNET')
+                            else:
+                                print('\nNo packet captured!')
+
