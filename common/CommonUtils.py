@@ -120,7 +120,7 @@ def make_device(chassis, slot, port):
     return device
 
 def make_device_msgset(device, msg_set):
-    return core.MessageSet(msg_set, device)    
+    return core.MessageSet(msg_set, device)
 
 def get_msg_set(context, msg_set):
     """
@@ -146,7 +146,7 @@ def send_msg(context, conn, msg, msg_dict):
     msg_set = get_msg_set(context, msg_set_name)
     req = msg_set.createRequest(msg_name, msg_dict)
     response = conn.sendRequestWaitResponse(req, port=0)
-    
+
     return msg_set.parseResponse(msg_name, response)
 
 def connect_chassis(chassis_ip):
@@ -203,7 +203,7 @@ def reserve_port(context, conn, slot, portgroup):
         admin_1 = get_msg_set(context, 'admin_1')
         userinfo = {"userName": uid, "hostname": host, "processId": "14276", "timestamp": tm}
         retries = 20
-        
+
         while retries > 0:
             moduleExist = False
             beReserved = False
@@ -401,7 +401,7 @@ cptr_slice_offset = {
     "PREAMBLE" : 0,
     "FRAME" : 1,
     "IP" : 2,
-    "IP_PAYLOAD" : 3,        
+    "IP_PAYLOAD" : 3,
 }
 
 cptr_FilterMode = {
@@ -636,8 +636,8 @@ def config_capture(context, realtime_mode, capture_mode, source_mode, flag_mode,
         setattr(context, 'capture_mode', cp_mod)
     else:
         context.capture_mode = cp_mod
-    config = { 
-        "config":{ 
+    config = {
+        "config":{
             "realtime_mode":rt_mod,
             "capture_mode":cp_mod,
             "source_mode":src_mod,
@@ -658,7 +658,7 @@ def config_capture(context, realtime_mode, capture_mode, source_mode, flag_mode,
             "buffer_size":0,
             "filter_mode":cptr_FilterMode[ "FRAME_CONTENT" ],
             "increased_memory_support":False,
-            "Ieee80211_cfg":{ 
+            "Ieee80211_cfg":{
                 "channelWidth":cptr_Ieee80211_channelWidth[ "CHANNEL_WIDTH_20M"],
                 "channels":[]
             },

@@ -78,9 +78,6 @@ with description('PPP_1:', 'access') as self:
         pppBlockConfigParams = self.get_proto_config('ppp')
         pppoeBlockConfigParams = self.get_proto_config('pppoe')
         l2tpBlockConfiguredParams = self.get_proto_config('l2tp')
-        #print('======================{}'.format(pppBlockConfigParams))
-        #print('======================{}'.format(pppoeBlockConfigParams))
-        #print('======================{}'.format(l2tpBlockConfiguredParams))
         pppblkcfg = []
         pppoeblkcfg = []
         l2tpblkcfg = []
@@ -152,7 +149,7 @@ with description('PPP_1:', 'access') as self:
                 self.pppdevicehdls = [1, 2]
                 self.pppBlockConfigParams = [{"blockHandle": self.pppdevicehdls[0], "objectHandle": 1235, "ilHandleList": [], "sessionCount": 1, "protocol": protocol["PPPOE"], "mruNegEnabled": True, "magicEnabled": True, "ncpTerminationEnabled": False, "ACCMenabled": False, "papEnabled": False, "chapEnabled": False, "chapIncludeId": True, "ipv4Enabled": True, "ipv6Enabled": False, "osiEnabled": False, "mplsEnabled": False, "mruSize": 1492, "mruMaxSize": 65535, "echoReqEnabled": False, "echoReqGenPeriod": 10, "echoReqMaxAttempts": 0, "lcpACCMvalue": 0, "lcpConfReqTimeout": 3, "lcpConfReqMaxAttempts": 10, "lcpTermReqTimeout": 3, "lcpTermReqMaxAttempts": 10, "ncpConfReqTimeout": 3, "ncpConfReqMaxAttempts": 10, "maxNaks": 5, "papReqTimeout": 0, "papReqMaxAttempts": 57196, "papPeerReqTimeout": 3, "chapChalReqTimeout": 36912, "chapReplyTimeout": 3, "chapAckTimeout": 63896, "chapReqMaxChalAttempts": 10, "chapReqMaxReplyAttempts": 1, "autoRetryCount": 0, "autoRetry": True, "sessionAutoRetry": False, "specifiedClientIpAddrEnabled": False, "userName": "spirent", "password": "spirent", "useAuthenticationList": False, "userNameList": [], "passwordList": [], "enablePrimaryDns": True, "primaryDns": [], "enableSecondaryDns": True, "secondaryDns": [], "userNameHasWildcard": True, "passwordHasWildcard": True, "lcpDelay": 0, "enableAutoFillIpv6": False, "RAMOFlag": RAMOFLAG["NODHCP"], "ipV4Start": {"address": [192, 85, 1, 3]}, "ipV4Step": {"address": [0, 0, 0, 1]}, "ipV4Count": 1, "ipV4PoolStart": {"address": [192, 0, 1, 0]}, "ipV4PoolStep": {"address": [0, 0, 0, 1]}, "ipV4PoolCount": 10, "ipV6Start": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6Step": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6Count": 0, "ipV6PoolStart": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6PoolStep": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6IntfId": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6IntfIdStep": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6PoolCount": 0, "unconnectedSessionThreshold": 0, "serverInactivityTimer": 30, "connectRate": 100, "disconnectRate": 100, "ipV6Prefix": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "optionList": []},
                                              {"blockHandle": self.pppdevicehdls[1], "objectHandle": 1235, "ilHandleList": [], "sessionCount": 1, "protocol": protocol["PPPOE"], "mruNegEnabled": True, "magicEnabled": True, "ncpTerminationEnabled": False, "ACCMenabled": False, "papEnabled": False, "chapEnabled": False, "chapIncludeId": True, "ipv4Enabled": True, "ipv6Enabled": False, "osiEnabled": False, "mplsEnabled": False, "mruSize": 1492, "mruMaxSize": 65535, "echoReqEnabled": False, "echoReqGenPeriod": 10, "echoReqMaxAttempts": 0, "lcpACCMvalue": 0, "lcpConfReqTimeout": 3, "lcpConfReqMaxAttempts": 10, "lcpTermReqTimeout": 3, "lcpTermReqMaxAttempts": 10, "ncpConfReqTimeout": 3, "ncpConfReqMaxAttempts": 10, "maxNaks": 5, "papReqTimeout": 0, "papReqMaxAttempts": 57196, "papPeerReqTimeout": 3, "chapChalReqTimeout": 36912, "chapReplyTimeout": 3, "chapAckTimeout": 63896, "chapReqMaxChalAttempts": 10, "chapReqMaxReplyAttempts": 1, "autoRetryCount": 0, "autoRetry": True, "sessionAutoRetry": False, "specifiedClientIpAddrEnabled": False, "userName": "spirent", "password": "spirent", "useAuthenticationList": False, "userNameList": [], "passwordList": [], "enablePrimaryDns": True, "primaryDns": [], "enableSecondaryDns": True, "secondaryDns": [], "userNameHasWildcard": True, "passwordHasWildcard": True, "lcpDelay": 0, "enableAutoFillIpv6": False, "RAMOFlag": RAMOFLAG["NODHCP"], "ipV4Start": {"address": [192, 85, 1, 4]}, "ipV4Step": {"address": [0, 0, 0, 1]}, "ipV4Count": 1, "ipV4PoolStart": {"address": [192, 0, 1, 0]}, "ipV4PoolStep": {"address": [0, 0, 0, 1]}, "ipV4PoolCount": 10, "ipV6Start": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6Step": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6Count": 0, "ipV6PoolStart": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6PoolStep": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6IntfId": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6IntfIdStep": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "ipV6PoolCount": 0, "unconnectedSessionThreshold": 0, "serverInactivityTimer": 30, "connectRate": 100, "disconnectRate": 100, "ipV6Prefix": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "optionList": []},]
-                
+
                 self.pppoeBlockConfigParams = [{"blockHandle": self.pppdevicehdls[0], "maxPayloadTagEnable": False, "maxPayloadBytes": 1500, "padiTimeout": 0, "padiMaxAttempts": 0, "padrTimeout": 0, "padrMaxAttempts": 0, "svcName": "", "acName": "SpirentTestCenter", "echoVendorSpecificTagInPado": False, "echoVendorSpecificTagInPads": False, "enableRelayAgent": False, "relayAgentType": "DSL_FORUM", "circuitId": "circuit @s", "remoteOrSessionId": "remote @m-@p-@b", "relayAgentMacAddr": {"address": [0, 0, 0, 0, 0, 0]}, "relayAgentMacAddrStep": {"address": [0, 0, 0, 0, 0, 1]}, "relayAgentMacAddrMask": {"address": [255, 255, 255, 255, 255, 255]}, "includeRelayAgentInPADI": False, "includeRelayAgentInPADR": False, "ethIIInterface": {"NetworkInterface": {"EmulatedIf": {"NetworkEndpoint": {}, "IsRange": True, "IsDirectlyConnected": True, "IsRealism": False}, "IfCountPerLowerIf": 1, "IfRecycleCount": 0, "TotalCount": 10, "BllHandle": 6684, "AffiliatedInterface": 0}, "SourceMac": {"address": [0, 16, 149, 0,  0, 1]}, "SrcMacStep": {"address": [0, 0, 0, 0, 0, 1]}, "SrcMacList": [], "SrcMacStepMask": {"address": [0, 0, 255, 255, 255, 255]}, "SrcMacRepeatCount": 0, "VpnSiteType": 6, "VpnSiteId": 9043968}, "tagList": []},
                                                {"blockHandle": self.pppdevicehdls[1], "maxPayloadTagEnable": False, "maxPayloadBytes": 1500, "padiTimeout": 0, "padiMaxAttempts": 0, "padrTimeout": 0, "padrMaxAttempts": 0, "svcName": "", "acName": "SpirentTestCenter", "echoVendorSpecificTagInPado": False, "echoVendorSpecificTagInPads": False, "enableRelayAgent": False, "relayAgentType": "DSL_FORUM", "circuitId": "circuit @s", "remoteOrSessionId": "remote @m-@p-@b", "relayAgentMacAddr": {"address": [0, 0, 0, 0, 0, 0]}, "relayAgentMacAddrStep": {"address": [0, 0, 0, 0, 0, 1]}, "relayAgentMacAddrMask": {"address": [255, 255, 255, 255, 255, 255]}, "includeRelayAgentInPADI": False, "includeRelayAgentInPADR": False, "ethIIInterface": {"NetworkInterface": {"EmulatedIf": {"NetworkEndpoint": {}, "IsRange": True, "IsDirectlyConnected": True, "IsRealism": False}, "IfCountPerLowerIf": 1, "IfRecycleCount": 0, "TotalCount": 10, "BllHandle": 6684, "AffiliatedInterface": 0}, "SourceMac": {"address": [0, 16, 149, 0, 16, 1]}, "SrcMacStep": {"address": [0, 0, 0, 0, 0, 1]}, "SrcMacList": [], "SrcMacStepMask": {"address": [0, 0, 255, 255, 255, 255]}, "SrcMacRepeatCount": 0, "VpnSiteType": 6, "VpnSiteId": 9043968}, "tagList": []},
                                                ]
@@ -218,32 +215,26 @@ with description('PPP_1:', 'access') as self:
                     posPcHandle = 5236
                     port_name = 'AAT Port 2'
                     assert sequence in sequenceType
-                    
+
                     portconfig = {"portConfigParams": {"enableBlockRate": enableBlockRate, "connectRate": int(conrate), "disconnectRate": int(disrate), "maxOutstandingSessions": int(outstanding), "clientMode": clientMode, "sequence": sequenceType[sequence], "portPcHandle": int(portPcHandle), "posPcHandle": int(posPcHandle), "portName": port_name}}
                     ppp_mset = get_port_msg_set(self, self.msg_set_name, portindex)
                     self.response = ppp_mset.sendMessageGetResponse('ConfigurePort', portconfig)
 
                 with it('configs ppp client device for port 1,'):
                     portindex = 0
-                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name) #self.ifHandle[0]
+                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name)
 
-                    #print('Press any key to continue...')
-                    #stra = raw_input()
                     self.config_pppdevice(portindex)
 
                 with it('configs ppp client device for port 2,'):
                     portindex = 1
-                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name) #self.ifHandle[0]
+                    attach_interface(self, self.ifHandle[portindex], portindex, self.msg_set_name)
 
-                    #print('Press any key to continue...')
-                    #stra = raw_input()
                     self.config_pppdevice(portindex)
-                with context('configs capture the ports and start devices'):
+
+                with context('starts capture and PPP devices'):
                     with it('configs capture with default and start capture before start devices on port 1,'):
                         portindex = 0
-                        #capture_default(self, 'TX_RX', portindex)
-                        
-                        #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
                         cp_mset = get_port_msg_set(self, Capture_mset, portindex)
                         self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
 
@@ -251,27 +242,20 @@ with description('PPP_1:', 'access') as self:
 
                     with it('connects ppp client device for port 2,'):
                         portindex = 1
-                        #print('Press any key to continue...')
-                        #stra = raw_input()
                         self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
 
                     with it('connects ppp client device for port 1,'):
                         portindex = 0
-                        #print('Press any key to continue...')
-                        #stra = raw_input()
                         self.control_pppox('CONNECT', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
                         time.sleep(3)
+
                     with context('stops devices and check the results,'):
                         with it('TERMINATEs ppp client device for port 1,'):
                             portindex = 0
-                            #print('Press any key to continue...')
-                            #stra = raw_input()
                             self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
 
                         with it('TERMINATEs ppp client device for port 2,'):
                             portindex = 1
-                            #print('Press any key to continue...')
-                            #stra = raw_input()
                             self.control_pppox('TERMINATE', [self.pppdevicehdls[portindex]], 'IPV4V6', 'DISCONNECT', portindex)
 
                         with it('stops capture after stopping devices,'):

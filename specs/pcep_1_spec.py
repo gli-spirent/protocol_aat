@@ -22,7 +22,6 @@ with description('PCEP_1:', 'routing') as self:
         pr_ip = ips_2_address(peer_ip)
         device = self.portgroup[port]
         pname = 'Port //' + device.chassis.ipaddr + '/' + str(device.slot+1) + '/' + str(device.cpuid)
-        #print('============={}'.format(pname))
         sessioncfg = {"BlockCfg": [{"Handle": bllHandle, "BlockCfg": {"IfHandleList": [ifHandle], "PcepMode": 2, "PcepDeviceRole": 0, "IpVersion": 0, "PeerIpv4Addr": {"address": pr_ip}, "PeerIpv4AddrStep": {"address": [0, 0, 0, 1]}, "PeerIpv6Addr": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, "PeerIpv6AddrStep": {"address": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]}, "PcepSessionIpAddress": 0, "IsSessionInitiator": True, "IsFixedSrcPort": False, "IsFixedDstPort": True, "CustomDstPort": 4189, "EnableNegotiation": True, "KeepAliveTimer": 30, "MinAccKeepAliveTimer": 0, "MaxAccKeepAliveTimer": 255, "DeadTimer": 90, "MinAccDeadTimer": 0, "MaxAccDeadTimer": 255, "EnablePCResults": False, "Authentication": 0, "Password": "Spirent", "SyncTimer": 60, "EnableStateful": True, "PcepCapability": 5, "EnableInitLsp": True, "EnableSegmentRouting": True, "SrPFlag": False, "SrNFlag": True, "SrLFlag": True, "MaxSIDDepth": 0, "UseCustomMessage": False, "OpenDelay": 0, "Ipv4Tos": 192, "Ipv6TrafficClass": 0, "Ttl": 64, "SpeakerEntityID": "", "EnableDBVersionTlv": False, "DBVersionStart": 1, "PortName": pname, "PathSetupTypes": [0, 1]}, "CustomPdu": [], "CustomObjectsVec": [], "OpenCfg": [{"ObjectType": 1, "ObjectHandle": 0}], "KeepaliveCfg": [], "AssociationGroup": [], "PstCustomTlv": [], "AssociationType": []}]}
         pcepmset = get_port_msg_set(self, 'PCEP_1', port)
         self.response = pcepmset.sendMessageGetResponse('ConfigPcepBlocks', sessioncfg)
@@ -120,18 +119,12 @@ with description('PCEP_1:', 'routing') as self:
                     self.sql_query(portindex, sqlcmd)
                     results = self.response["results"]
                     for result in results:
-                        #print result
                         rows = result['rows']
                         expect(len(rows)).to(equal(1))
-                        #assert len(rows) == 1
                         for row in rows:
                             stats_item = row['int64Values']
-                            #print "======================================="
                             expect(len(stats_item)).to(equal(4))
-                            #assert len(stats_item) == 4
                             expect(stats_item[1]).to(equal(1)) # IDLE
-                            #assert stats_item[1] in PCEP_STATE
-                            #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
 
                 with it('configs global parameters for port 2,'):
                     pcep_1 = get_port_msg_set(self, self.msg_set_name, 1)
@@ -146,21 +139,17 @@ with description('PCEP_1:', 'routing') as self:
 
                     expect(self.response).to(equal({}))
 
-                with context('connects devices and do capture after config,'):
+                with context('starts capture and PCEP devices,'):
                     with it('configs capture with default and start capture before start devices,'):
                         portindex = 0
-                        #capture_default(self, 'TX_RX', portindex)
-                        
-                        #config = config_capture(self, 'REALTIME_DISABLE', 'REGULAR_MODE', source_mode, 'REGULAR_FLAG_MODE', 'WRAP')
                         cp_mset = get_port_msg_set(self, Capture_mset, portindex)
                         self.response = cp_mset.sendMessageGetResponse('SetCaptureCfg', self.capture_config)
 
                         start_capture(self, portindex)
-                        
+
                     with it('starts pce device for port 2,'):
                         portindex = 1
                         pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
-                        #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
                         response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
 
                         expect(response).to(equal({}))
@@ -169,7 +158,6 @@ with description('PCEP_1:', 'routing') as self:
                         global PCEP_STATE
                         portindex = 0
                         pcep_1 = get_port_msg_set(self, self.msg_set_name, portindex)
-                        #print("start pcc {}".format(self.pcepdevicehdls[portindex]))
                         response = pcep_1.sendMessageGetResponse('StartPcepSessions', {"Handles": [self.pcepdevicehdls[portindex]]})
                         expect(response).to(equal({}))
                         time.sleep(3)
@@ -177,18 +165,13 @@ with description('PCEP_1:', 'routing') as self:
                         self.sql_query(portindex, sqlcmd)
                         results = self.response["results"]
                         for result in results:
-                            #print result
                             rows = result['rows']
                             expect(len(rows)).to(equal(1))
-                            #assert len(rows) == 1
                             for row in rows:
                                 stats_item = row['int64Values']
-                                #print "======================================="
                                 expect(len(stats_item)).to(equal(4))
-                                #assert len(stats_item) == 4
                                 expect(stats_item[1]).to(equal(5)) # UP
-                                #assert stats_item[1] in PCEP_STATE
-                                #print('PCEP device[{0}] is {1}'.format(stats_item[0], PCEP_STATE[stats_item[1]]))
+
                     with context('stops devices and check the results,'):
                         with it('stops pcc device for port 1,'):
                             portindex = 0

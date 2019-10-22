@@ -16,9 +16,8 @@ with description('Admin:', 'admin') as self:
                 self.port = 1
                 #print(os.environ)
                 if os.environ.has_key('CSP1'):
-                    #print(os.environ['CSP1'])
                     (self.chassis, self.slot, self.port) = extract_chassis(os.environ['CSP1'])
-                    #print(chassis, slot, port)
+
                 # conn and msg_set is a must for calling send_message
                 self.conn = connect_chassis(self.chassis)
                 self.msg_set_name = 'admin_1'
@@ -30,7 +29,6 @@ with description('Admin:', 'admin') as self:
                 msg_name = 'admin_1.GetPortGroupType'
                 msg_content = {"portGroup": [{"slot": -1, "portGroup": -1, "port": -1}]}
                 resp_dict = send_msg(self, self.conn, msg_name, msg_content)
-                #print resp_dict
                 portTypeList = resp_dict['pgTypeList']
                 expect(portTypeList[0]['pgType']).to(equal('VM-1G-V1-1P'))
 
@@ -41,16 +39,13 @@ with description('Admin:', 'admin') as self:
                 portStatusList = resp_dict["portStatusList"]
                 speed = (portStatusList[0])["speed"]
                 linkStatus = (portStatusList[0])["linkStatus"]
-                #print resp_dict
                 expect(linkStatus).to(equal('Up') | equal('Down'))
                 expect(speed).to(equal('1G'))
 
             with it('reserves a port'):
                 self.reservedports = reserve_port(self, self.conn, self.slot, self.port)
                 expect(self.reservedports).to(equal(True))
-                #print(result)
             
             with it('releases a port'):
                 if self.reservedports:
                     result = release_port(self, self.conn, self.slot, self.port)
-                #print(result)
